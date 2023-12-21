@@ -2,40 +2,40 @@
 #include <climits>
 #include <thread>
 #include <mutex>
+#include <queue>
 #include "common/graph.h"
-
-std::mutex mtx; // Mutex for synchronization
 
 void dijk_thread_sub(Graph graph, std::vector<std::vector<int>> &ans, const int n, int thread_id, int num_threads) {
     for (int i = thread_id; i < n; i += num_threads) {
-        std::vector<int> dist(n, INT_MAX);
-        dist[i] = 0;
+        ans[i][i] = 0;
         std::vector<bool> visited(n, false);
 
-        for (int j = 0; j < n; j++) {
-            int u = -1;
+        auto& current_ans = ans[i];
 
-            // Find the unvisited node with the smallest distance
-            for (int k = 0; k < n; k++) {
-                if (!visited[k] && (u == -1 || dist[k] < dist[u])) {
-                    u = k;
-                }
-            }
+        // Use priority queue for efficient min element extraction
+        std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>> pq;
+        pq.push({0, i});
 
+        while (!pq.empty()) {
+            int u = pq.top().second;
+            pq.pop();
+
+            if (visited[u]) continue;
             visited[u] = true;
 
-            // Relax neighboring nodes
-            for (int k = 0; k < outgoing_size(graph, u); k++) {
-                int v = outgoing_begin(graph, u)[k];
-                if (dist[u] + 1 < dist[v]) {
-                    dist[v] = dist[u] + 1;
+            auto outgoing = outgoing_begin(graph, u);
+            int o_size = outgoing_size(graph, u);
+
+            for (int k = 0; k < o_size; k++) {
+                int v = outgoing[k];
+                int new_distance = current_ans[u] + 1;
+
+                if (new_distance < current_ans[v]) {
+                    current_ans[v] = new_distance;
+                    pq.push({new_distance, v});
                 }
             }
         }
-
-        // Lock the mutex before modifying the shared ans vector
-        std::lock_guard<std::mutex> lock(mtx);
-        ans[i] = dist;
     }
 }
 

@@ -1,27 +1,39 @@
 #include <vector>
 #include <climits>
+#include <queue>
 #include "common/graph.h"
 
 void dijk_serial(Graph graph, std::vector<std::vector<int>> &ans, const int n) {
     for (int i = 0; i < n; i++) {
-        std::vector<int> dist(n, INT_MAX);
-        dist[i] = 0;
+        ans[i][i] = 0;
         std::vector<bool> visited(n, false);
-        for (int j = 0; j < n; j++) {
-            int u = -1;
-            for (int k = 0; k < n; k++) {
-                if (!visited[k] && (u == -1 || dist[k] < dist[u])) {
-                    u = k;
-                }
-            }
+
+        // Store ans[i] to avoid repeated function calls
+        auto& current_ans = ans[i];
+
+        // Use priority queue for efficient min element extraction
+        std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>> pq;
+        pq.push({0, i});
+
+        while (!pq.empty()) {
+            int u = pq.top().second;
+            pq.pop();
+
+            if (visited[u]) continue;
             visited[u] = true;
-            for (int k = 0; k < outgoing_size(graph, u); k++) {
-                int v = outgoing_begin(graph, u)[k];
-                if (dist[u] + 1 < dist[v]) {
-                    dist[v] = dist[u] + 1;
+
+            auto outgoing = outgoing_begin(graph, u);
+            auto o_size = outgoing_size(graph, u);
+            
+            for (int k = 0; k < o_size; k++) {
+                int v = outgoing[k];
+                int new_distance = current_ans[u] + 1;
+
+                if (new_distance < current_ans[v]) {
+                    current_ans[v] = new_distance;
+                    pq.push({new_distance, v});
                 }
             }
         }
-        ans[i] = dist;
     }
 }

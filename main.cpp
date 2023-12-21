@@ -44,18 +44,18 @@ int main(int argc, char** argv) {
     std::chrono::high_resolution_clock sc;
 
     Graph g = load_graph_binary(argv[2]);
-    const int n = g->num_nodes;
+    const std::size_t n = g->num_nodes;
 
     // Calculate ref answer
+    std::vector<std::vector<int>> ref_ans(n, std::vector<int>(n, INT_MAX));
     std::cout << "Calculating ref answer...\n";
-    std::vector<std::vector<int>> ref_ans(n, std::vector<int>(n));
     auto ref_start = sc.now(); 
     dijk_serial(g, ref_ans, n);
     auto ref_end = sc.now();
     auto ref_time_span = static_cast<std::chrono::duration<double>>(ref_end - ref_start);
     std::cout << "ref answer done.\n";
 
-    std::vector<std::vector<int>> ans(n, std::vector<int>(n));
+    std::vector<std::vector<int>> ans(n, std::vector<int>(n, INT_MAX));
     std::cout << "Calculating answer...\n";
     auto start = sc.now(); 
     if (strncmp(argv[1], "serial", 6) == 0) {
