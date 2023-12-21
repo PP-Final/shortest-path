@@ -41,13 +41,9 @@ void dijk_thread_sub(Graph graph, std::vector<std::vector<int>> &ans, const int 
 
 void dijk_thread(Graph graph, std::vector<std::vector<int>> &ans, const int n) {
     const auto num_threads = std::thread::hardware_concurrency();
-    std::vector<std::thread> threads;
+    std::vector<std::jthread> threads;
 
     for (int i = 0; i < num_threads; i++) {
         threads.emplace_back(dijk_thread_sub, graph, std::ref(ans), n, i, num_threads);
-    }
-
-    for (auto &thread : threads) {
-        thread.join();
     }
 }
