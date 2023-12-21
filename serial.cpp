@@ -2,13 +2,11 @@
 #include <climits>
 #include "common/graph.h"
 
-using namespace std;
-
-void dijk_serial(Graph graph, vector<vector<int>> &ans, const int n) {
+void dijk_serial(Graph graph, std::vector<std::vector<int>> &ans, const int n) {
     for (int i = 0; i < n; i++) {
-        vector<int> dist(n, INT_MAX);
+        std::vector<int> dist(n, INT_MAX);
         dist[i] = 0;
-        vector<bool> visited(n, false);
+        std::vector<bool> visited(n, false);
         for (int j = 0; j < n; j++) {
             int u = -1;
             for (int k = 0; k < n; k++) {
