@@ -17,6 +17,9 @@ void free_graph(Graph graph)
 
   free(graph->incoming_starts);
   free(graph->incoming_edges);
+
+  free(graph->edges_weight);
+
   free(graph);
 }
 
@@ -35,9 +38,11 @@ void build_edges(graph* graph, int* scratch)
 {
   int num_nodes = graph->num_nodes;
   graph->outgoing_edges = (int*)malloc(sizeof(int) * graph->num_edges);
+  graph->edges_weight = (int*)malloc(sizeof(int) * graph->num_edges);
   for(int i = 0; i < graph->num_edges; i++)
   {
     graph->outgoing_edges[i] = scratch[num_nodes + i];
+    graph->edges_weight[i] = 1;
   }
 }
 
@@ -263,6 +268,7 @@ Graph load_graph_binary(const char* filename)
 
     graph->outgoing_starts = (int*)malloc(sizeof(int) * graph->num_nodes);
     graph->outgoing_edges = (int*)malloc(sizeof(int) * graph->num_edges);
+    graph->edges_weight = (int*)malloc(sizeof(int) * graph->num_edges);
 
     if (fread(graph->outgoing_starts, sizeof(int), graph->num_nodes, input) != (size_t) graph->num_nodes) {
         fprintf(stderr, "Error reading nodes.\n");
@@ -272,6 +278,10 @@ Graph load_graph_binary(const char* filename)
     if (fread(graph->outgoing_edges, sizeof(int), graph->num_edges, input) != (size_t) graph->num_edges) {
         fprintf(stderr, "Error reading edges.\n");
         exit(1);
+    }
+
+    for (int i = 0; i < graph->num_edges; i++) {
+        graph->edges_weight[i] = 1;
     }
 
     fclose(input);

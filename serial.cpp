@@ -23,11 +23,12 @@ void dijk_serial(Graph graph, std::vector<std::vector<int>> &ans, const int n) {
             visited[u] = true;
 
             auto outgoing = outgoing_begin(graph, u);
+            auto weight = weight_begin(graph, u);
             auto o_size = outgoing_size(graph, u);
             
             for (int k = 0; k < o_size; k++) {
                 int v = outgoing[k];
-                int new_distance = current_ans[u] + 1;
+                int new_distance = current_ans[u] + weight[k];
 
                 if (new_distance < current_ans[v]) {
                     current_ans[v] = new_distance;

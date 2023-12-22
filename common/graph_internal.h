@@ -31,6 +31,21 @@ static inline const Vertex* outgoing_end(const Graph g, Vertex v)
   return g->outgoing_edges + offset;
 }
 
+static inline const Vertex* weight_begin(const Graph g, Vertex v)
+{
+  REQUIRES(g != NULL);
+  REQUIRES(0 <= v && v < num_nodes(g));
+  return g->edges_weight + g->outgoing_starts[v];
+}
+
+static inline const Vertex* weight_end(const Graph g, Vertex v)
+{
+  REQUIRES(g != NULL);
+  REQUIRES(0 <= v && v < num_nodes(g));
+  int offset = (v == g->num_nodes - 1) ? g->num_edges : g->outgoing_starts[v + 1];
+  return g->edges_weight + offset;
+}
+
 static inline int outgoing_size(const Graph g, Vertex v)
 {
   REQUIRES(g != NULL);

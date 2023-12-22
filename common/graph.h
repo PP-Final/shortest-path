@@ -2,6 +2,7 @@
 #define __GRAPH_H__
 
 using Vertex = int;
+using Weight = int;
 
 struct graph
 {
@@ -15,9 +16,11 @@ struct graph
     // outgoing edges, please see the top-down bfs implementation.
     int* outgoing_starts;
     Vertex* outgoing_edges;
-
+    
     int* incoming_starts;
     Vertex* incoming_edges;
+
+    Weight* edges_weight;
 };
 
 using Graph = graph*;
@@ -34,6 +37,9 @@ static inline const Vertex* incoming_begin(const Graph, Vertex);
 static inline const Vertex* incoming_end(const Graph, Vertex);
 static inline int incoming_size(const Graph, Vertex);
 
+static inline const Vertex* weight_begin(const Graph, Vertex);
+static inline const Vertex* weight_end(const Graph, Vertex);
+// weight_size is the same as outgoing_size
 
 /* IO */
 Graph load_graph(const char* filename);
