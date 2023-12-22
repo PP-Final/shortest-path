@@ -3,7 +3,7 @@
 #include <queue>
 #include "common/graph.h"
 
-void dijk_serial(Graph graph, std::vector<std::vector<int>> &ans, const int n) {
+void dijk_serial(Graph graph, int** ans, const int n) {
     for (int i = 0; i < n; i++) {
         ans[i][i] = 0;
         std::vector<bool> visited(n, false);

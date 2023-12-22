@@ -12,22 +12,22 @@
 
 void free_graph(Graph graph)
 {
-  free(graph->outgoing_starts);
-  free(graph->outgoing_edges);
+  delete[] graph->outgoing_starts;
+  delete[] graph->outgoing_edges;
 
-  free(graph->incoming_starts);
-  free(graph->incoming_edges);
+  delete[] graph->incoming_starts;
+  delete[] graph->incoming_edges;
 
-  free(graph->edges_weight);
+  delete[] graph->edges_weight;
 
-  free(graph);
+  delete graph;
 }
 
 
 void build_start(graph* graph, int* scratch)
 {
   int num_nodes = graph->num_nodes;
-  graph->outgoing_starts = (int*)malloc(sizeof(int) * num_nodes);
+  graph->outgoing_starts = new int[num_nodes];
   for(int i = 0; i < num_nodes; i++)
   {
     graph->outgoing_starts[i] = scratch[i];
@@ -37,8 +37,8 @@ void build_start(graph* graph, int* scratch)
 void build_edges(graph* graph, int* scratch)
 {
   int num_nodes = graph->num_nodes;
-  graph->outgoing_edges = (int*)malloc(sizeof(int) * graph->num_edges);
-  graph->edges_weight = (int*)malloc(sizeof(int) * graph->num_edges);
+  graph->outgoing_edges = new int[graph->num_edges];
+  graph->edges_weight = new int[graph->num_edges];
   for(int i = 0; i < graph->num_edges; i++)
   {
     graph->outgoing_edges[i] = scratch[num_nodes + i];
@@ -53,11 +53,11 @@ void build_incoming_edges(graph* graph) {
     //printf("Beginning build_incoming... (%d nodes)\n", graph->num_nodes);
 
     int num_nodes = graph->num_nodes;
-    int* node_counts = (int*)malloc(sizeof(int) * num_nodes);
-    int* node_scatter = (int*)malloc(sizeof(int) * num_nodes);
+    int* node_counts = new int[num_nodes];
+    int* node_scatter = new int[num_nodes];
 
-    graph->incoming_starts = (int*)malloc(sizeof(int) * num_nodes);
-    graph->incoming_edges = (int*)malloc(sizeof(int) * graph->num_edges);
+    graph->incoming_starts = new int[num_nodes];
+    graph->incoming_edges = new int[graph->num_edges];
 
     for (int i=0; i<num_nodes; i++)
         node_counts[i] = node_scatter[i] = 0;
@@ -219,14 +219,14 @@ void print_graph(const graph* graph)
 
 Graph load_graph(const char* filename)
 {
-  graph* graph = (struct graph*)(malloc(sizeof(struct graph)));
+  graph* graph = new struct graph();
 
   // open the file
   std::ifstream graph_file;
   graph_file.open(filename);
   get_meta_data(graph_file, graph);
 
-  int* scratch = (int*) malloc(sizeof(int) * (graph->num_nodes + graph->num_edges));
+  int* scratch = new int[graph->num_nodes + graph->num_edges];
   read_graph_file(graph_file, scratch);
 
   build_start(graph, scratch);
@@ -242,8 +242,7 @@ Graph load_graph(const char* filename)
 
 Graph load_graph_binary(const char* filename)
 {
-    graph* graph = (struct graph*)(malloc(sizeof(struct graph)));
-
+    graph* graph = new struct graph();
     FILE* input = fopen(filename, "rb");
 
     if (!input) {
@@ -266,9 +265,9 @@ Graph load_graph_binary(const char* filename)
     graph->num_nodes = header[1];
     graph->num_edges = header[2];
 
-    graph->outgoing_starts = (int*)malloc(sizeof(int) * graph->num_nodes);
-    graph->outgoing_edges = (int*)malloc(sizeof(int) * graph->num_edges);
-    graph->edges_weight = (int*)malloc(sizeof(int) * graph->num_edges);
+    graph->outgoing_starts = new int[graph->num_nodes];
+    graph->outgoing_edges = new int[graph->num_edges];
+    graph->edges_weight = new int[graph->num_edges];
 
     if (fread(graph->outgoing_starts, sizeof(int), graph->num_nodes, input) != (size_t) graph->num_nodes) {
         fprintf(stderr, "Error reading nodes.\n");

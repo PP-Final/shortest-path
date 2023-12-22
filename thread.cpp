@@ -5,7 +5,7 @@
 #include <queue>
 #include "common/graph.h"
 
-void dijk_thread_sub(Graph graph, std::vector<std::vector<int>> &ans, const int n, int thread_id, int num_threads) {
+void dijk_thread_sub(Graph graph, int** ans, const int n, int thread_id, int num_threads) {
     for (int i = thread_id; i < n; i += num_threads) {
         ans[i][i] = 0;
         std::vector<bool> visited(n, false);
@@ -40,11 +40,11 @@ void dijk_thread_sub(Graph graph, std::vector<std::vector<int>> &ans, const int 
     }
 }
 
-void dijk_thread(Graph graph, std::vector<std::vector<int>> &ans, const int n) {
+void dijk_thread(Graph graph, int** ans, const int n) {
     const auto num_threads = std::thread::hardware_concurrency();
     std::vector<std::jthread> threads;
 
     for (int i = 0; i < num_threads; i++) {
-        threads.emplace_back(dijk_thread_sub, graph, std::ref(ans), n, i, num_threads);
+        threads.emplace_back(dijk_thread_sub, graph, ans, n, i, num_threads);
     }
 }

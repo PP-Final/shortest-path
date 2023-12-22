@@ -38,6 +38,24 @@ void output_summary(T1 ref, T2 impl){
     );
 }
 
+int** init_ans(size_t n){
+    int** ans = new int*[n];
+    for (int i = 0; i < n; i++) {
+        ans[i] = new int[n];
+        for (int j = 0; j < n; j++) {
+            ans[i][j] = INT_MAX;
+        }
+    }
+    return ans;
+}
+
+void free_ans(int** ans, size_t n){
+    for (int i = 0; i < n; i++) {
+        delete[] ans[i];
+    }
+    delete[] ans;
+}
+
 int main(int argc, char** argv) {
     // Check arguments
     if (argc < 3) {
@@ -51,11 +69,13 @@ int main(int argc, char** argv) {
     // Load graph
     Graph g = load_graph_binary(argv[2]);
     const std::size_t n = g->num_nodes;
+    std::cout << "Graph loaded.\n";
+    std::cout << "num_nodes: " << n << "\n";
 
     //print_graph(g);
 
     // Calculate ref answer
-    std::vector<std::vector<int>> ref_ans(n, std::vector<int>(n, INT_MAX));
+    auto ref_ans = init_ans(n);
     std::cout << "Calculating ref answer...\n";
     auto ref_start = sc.now(); 
     dijk_serial(g, ref_ans, n);
@@ -64,7 +84,7 @@ int main(int argc, char** argv) {
     std::cout << "ref answer done.\n";
 
     // Calculate answer with given method
-    std::vector<std::vector<int>> ans(n, std::vector<int>(n, INT_MAX));
+    auto ans = init_ans(n);
     std::cout << "Calculating answer...\n";
     auto start = sc.now(), end = sc.now();
     if (strncmp(argv[1], "serial", 6) == 0) {
@@ -101,6 +121,19 @@ int main(int argc, char** argv) {
     }
     auto time_span = static_cast<std::chrono::duration<double>>(end - start);
     std::cout << "answer calc done.\n";
+
+    // Verify ans
+    for (int i = 0; i < n; i++) {
+        if (memcmp(ref_ans[i], ans[i], n * sizeof(int)) != 0) {
+            std::cerr << "Verification failed.\n";
+            return 2;
+        }
+    }
+    std::cout << "Verification passed.\n";
+
+    free_ans(ref_ans, n);
+    free_ans(ans, n);
+    free_graph(g);
 
     // Output result
     output_summary(ref_time_span, time_span);
