@@ -4,8 +4,9 @@
 #include <mutex>
 #include <queue>
 #include "common/graph.h"
+#include "impl.h"
 
-void dijk_thread_sub(Graph graph, int** ans, const int n, int thread_id, int num_threads) {
+void dijk_thread_sub(Graph graph, Answer ans, const int n, int thread_id, int num_threads) {
     for (int i = thread_id; i < n; i += num_threads) {
         ans[i][i] = 0;
         std::vector<bool> visited(n, false);
@@ -40,7 +41,7 @@ void dijk_thread_sub(Graph graph, int** ans, const int n, int thread_id, int num
     }
 }
 
-void dijk_thread(Graph graph, int** ans, const int n) {
+void dijk_thread(Graph graph, Answer ans, const int n) {
     const auto num_threads = std::thread::hardware_concurrency();
     std::vector<std::jthread> threads;
 

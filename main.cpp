@@ -9,7 +9,7 @@
 #include "common/graph.h"
 #include "impl.h"
 
-void output_result(const std::vector<std::vector<int>> &ans, const int n) {
+void output_result(const Answer ans, const int n) {
     // table
     std::cout << "    ";
     for (int i = 0; i < n; i++) {
@@ -38,8 +38,8 @@ void output_summary(T1 ref, T2 impl){
     );
 }
 
-int** init_ans(size_t n){
-    int** ans = new int*[n];
+Answer init_ans(size_t n){
+    Answer ans = new int*[n];
     for (int i = 0; i < n; i++) {
         ans[i] = new int[n];
         for (int j = 0; j < n; j++) {
@@ -49,7 +49,7 @@ int** init_ans(size_t n){
     return ans;
 }
 
-void free_ans(int** ans, size_t n){
+void free_ans(Answer ans, size_t n){
     for (int i = 0; i < n; i++) {
         delete[] ans[i];
     }
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
 
     // Verify ans
     for (int i = 0; i < n; i++) {
-        if (memcmp(ref_ans[i], ans[i], n * sizeof(int)) != 0) {
+        if (memcmp(ref_ans[i], ans[i], n * sizeof(ans[0][0])) != 0) {
             std::cerr << "Verification failed.\n";
             return 2;
         }

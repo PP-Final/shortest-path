@@ -2,8 +2,9 @@
 #include <climits>
 #include <queue>
 #include "common/graph.h"
+#include "impl.h"
 
-void dijk_serial(Graph graph, int** ans, const int n) {
+void dijk_serial(Graph graph, Answer ans, const int n) {
     for (int i = 0; i < n; i++) {
         ans[i][i] = 0;
         std::vector<bool> visited(n, false);
