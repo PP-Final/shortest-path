@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     // Calculate answer with given method
     std::vector<std::vector<int>> ans(n, std::vector<int>(n, INT_MAX));
     std::cout << "Calculating answer...\n";
-    auto start, end;
+    auto start = sc.now(), end = sc.now();
     if (strncmp(argv[1], "serial", 6) == 0) {
         start = sc.now(); 
         dijk_serial(g, ans, n);
