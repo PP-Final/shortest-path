@@ -66,30 +66,39 @@ int main(int argc, char** argv) {
     // Calculate answer with given method
     std::vector<std::vector<int>> ans(n, std::vector<int>(n, INT_MAX));
     std::cout << "Calculating answer...\n";
-    auto start = sc.now(); 
+    auto start, end;
     if (strncmp(argv[1], "serial", 6) == 0) {
+        start = sc.now(); 
         dijk_serial(g, ans, n);
+        end = sc.now();
     }
     else if (strncmp(argv[1], "thread", 6) == 0) {
+        start = sc.now(); 
         dijk_thread(g, ans, n);
+        end = sc.now();
     }
     else if (strncmp(argv[1], "mp", 2) == 0) {
+        start = sc.now();
         std::cerr << "Not implemented yet.\n";
+        end = sc.now();
         return 2;
     }
     else if (strncmp(argv[1], "mpi", 3) == 0) {
+        start = sc.now();
         std::cerr << "Not implemented yet.\n";
+        end = sc.now();
         return 2;
     }
     else if (strncmp(argv[1], "cuda", 4) == 0) {
+        start = sc.now();
         std::cerr << "Not implemented yet.\n";
+        end = sc.now();
         return 2;
     }
     else {
         std::cerr << "Invalid method: " << argv[1] << "\n";
         return 1;
     }
-    auto end = sc.now();
     auto time_span = static_cast<std::chrono::duration<double>>(end - start);
     std::cout << "answer calc done.\n";
 
