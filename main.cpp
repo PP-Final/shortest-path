@@ -106,9 +106,8 @@ int main(int argc, char** argv) {
     else if (strncmp(argv[1], "mp", 2) == 0) {
         std::cout << "num_threads: " << num_threads << "\n";
         start = sc.now();
-        std::cerr << "Not implemented yet.\n";
+        dijk_mp(g, ans, n, num_threads);
         end = sc.now();
-        return 2;
     }
     else if (strncmp(argv[1], "mpi", 3) == 0) {
         start = sc.now();
@@ -132,11 +131,11 @@ int main(int argc, char** argv) {
     // Verify ans
     for (int i = 0; i < n; i++) {
         if (memcmp(ref_ans[i], ans[i], n * sizeof(ans[0][0])) != 0) {
-            std::cerr << "Verification failed.\n";
+            std::cerr << "\033[1;31mVerification failed.\033[0m\n";
             return 2;
         }
     }
-    std::cout << "Verification passed.\n";
+    std::cout << "\033[1;32mVerification passed.\033[0m\n";
 
     free_ans(ref_ans, n);
     free_ans(ans, n);
