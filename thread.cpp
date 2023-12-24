@@ -41,8 +41,7 @@ void dijk_thread_sub(Graph graph, Answer ans, const int n, int thread_id, int nu
     }
 }
 
-void dijk_thread(Graph graph, Answer ans, const int n) {
-    const auto num_threads = std::thread::hardware_concurrency();
+void dijk_thread(Graph graph, Answer ans, const int n, const int num_threads) {
     std::vector<std::jthread> threads;
 
     for (int i = 0; i < num_threads; i++) {

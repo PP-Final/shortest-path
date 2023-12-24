@@ -2,7 +2,7 @@
 #include <chrono>
 #include <cstdio>
 #include <climits>
-
+#include <thread>
 #include <iostream>
 #include <vector>
 
@@ -63,6 +63,11 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    int num_threads = std::thread::hardware_concurrency();
+    if (argc >= 4) {
+        num_threads = std::atoi(argv[3]);
+    }
+
     // Initialize timer
     std::chrono::high_resolution_clock sc;
 
@@ -93,11 +98,13 @@ int main(int argc, char** argv) {
         end = sc.now();
     }
     else if (strncmp(argv[1], "thread", 6) == 0) {
+        std::cout << "num_threads: " << num_threads << "\n";
         start = sc.now(); 
-        dijk_thread(g, ans, n);
+        dijk_thread(g, ans, n, num_threads);
         end = sc.now();
     }
     else if (strncmp(argv[1], "mp", 2) == 0) {
+        std::cout << "num_threads: " << num_threads << "\n";
         start = sc.now();
         std::cerr << "Not implemented yet.\n";
         end = sc.now();
