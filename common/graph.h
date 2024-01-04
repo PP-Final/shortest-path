@@ -52,6 +52,8 @@ void print_graph(const graph*);
 /* Deallocation */
 void free_graph(Graph);
 
+void generate_random_edges(Vertex* edges, int start, int end, int size);
+Graph generate_random_graph(int num_nodes, int num_edges, int num_threads);
 
 /* Included here to enable inlining. Don't look. */
 #include "graph_internal.h"
