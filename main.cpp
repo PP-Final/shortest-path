@@ -76,6 +76,7 @@ int main(int argc, char** argv) {
     const std::size_t n = g->num_nodes;
     std::cout << "Graph loaded.\n";
     std::cout << "num_nodes: " << n << "\n";
+    std::cout << "num_edges: " << g->num_edges << "\n";
 
     //print_graph(g);
 
