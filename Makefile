@@ -10,6 +10,12 @@ all:
 	-lpthread \
 	-fopenmp
 
+clean:
+	rm -f pp-final gen
+
+gen:
+	g++ -I ./common gen.cpp common/graph.cpp -o gen -std=c++23 -O3 -lpthread
+
 mpi:
 	mpic++ -I ./common serial.cpp mpi.cpp common/graph.cpp common/utils.cpp \
 	-o pp-final-mpi \
@@ -24,3 +30,5 @@ run-mpi:
 
 copy:
 	parallel-scp -h hosts -r ~/shortest-path ~
+	g++ -I ./common main.cpp serial.cpp thread.cpp mp.cpp common/graph.cpp -o pp-final -std=c++23 -O3 -lpthread -fopenmp
+

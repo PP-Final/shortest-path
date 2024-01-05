@@ -3,6 +3,9 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <ctime>
+#include <thread>
+#include <vector>
 
 #include "graph.h"
 #include "graph_internal.h"
@@ -320,4 +323,78 @@ void store_graph_binary(const char* filename, Graph graph) {
     }
 
     fclose(output);
+}
+
+void generate_random_edges(Vertex* edges, int start, int end, int size) {
+    for (int i = start; i < end; ++i) {
+        edges[i] = std::rand() % size;
+    }
+}
+
+Graph generate_random_graph(int num_nodes, int num_edges, int num_threads) {
+    Graph graph = new struct graph();
+    graph->num_nodes = num_nodes;
+    graph->num_edges = num_edges;
+
+    // Allocate memory for arrays
+    graph->outgoing_starts = new int[num_nodes];
+    graph->outgoing_edges = new Vertex[num_edges];
+    graph->incoming_starts = new int[num_nodes];
+    graph->incoming_edges = new Vertex[num_edges];
+    graph->edges_weight = new Weight[num_edges];
+
+    // Initialize random number generator
+    std::srand(std::time(0));
+
+    // Generate random outgoing edges using multiple threads
+    std::vector<std::thread> threads;
+    int chunk_size = num_nodes / num_threads;
+    int remaining_nodes = num_nodes;
+
+    for (int i = 0; i < num_threads; ++i) {
+        int current_chunk_size = (i == num_threads - 1) ? remaining_nodes : chunk_size;
+        threads.emplace_back(generate_random_edges, graph->outgoing_edges, num_nodes - remaining_nodes, num_nodes - remaining_nodes + current_chunk_size, num_nodes);
+        remaining_nodes -= current_chunk_size;
+    }
+
+    // Wait for threads to finish
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    // Set outgoing_starts array
+    int current_edge = 0;
+    for (int i = 0; i < num_nodes; ++i) {
+        graph->outgoing_starts[i] = current_edge;
+        current_edge += graph->outgoing_starts[i];
+    }
+
+    // Generate random incoming edges using multiple threads
+    threads.clear();
+    remaining_nodes = num_nodes;
+
+    for (int i = 0; i < num_threads; ++i) {
+        int current_chunk_size = (i == num_threads - 1) ? remaining_nodes : chunk_size;
+        threads.emplace_back(generate_random_edges, graph->incoming_edges, num_nodes - remaining_nodes, num_nodes - remaining_nodes + current_chunk_size, num_nodes);
+        remaining_nodes -= current_chunk_size;
+    }
+
+    // Wait for threads to finish
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    // Set incoming_starts array
+    current_edge = 0;
+    for (int i = 0; i < num_nodes; ++i) {
+        graph->incoming_starts[i] = current_edge;
+        current_edge += graph->incoming_starts[i];
+    }
+
+    // Set edge weights to 1 for simplicity
+    for (int i = 0; i < num_edges; ++i) {
+        graph->edges_weight[i] = 1;
+    }
+
+    return graph;
 }
