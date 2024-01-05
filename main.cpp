@@ -7,54 +7,8 @@
 #include <vector>
 
 #include "common/graph.h"
+#include "common/utils.h"
 #include "impl.h"
-
-void output_result(const Answer ans, const int n) {
-    // table
-    std::cout << "    ";
-    for (int i = 0; i < n; i++) {
-        std::cout << i << "\t";
-    }
-    std::cout << "\n";
-    for (int i = 0; i < n; i++) {
-        std::cout << i << "   ";
-        for (int j = 0; j < n; j++) {
-            if (ans[i][j] == INT_MAX) {
-                std::cout << "inf\t";
-            } else {
-                std::cout << ans[i][j] << "\t";
-            }
-        }
-        std::cout << "\n";
-    }
-}
-
-template <class T1, class T2>
-void output_summary(T1 ref, T2 impl){
-    std::printf(
-        "%ld ms (%fx speedup)\n",
-        std::chrono::duration_cast<std::chrono::microseconds>(impl).count(),
-        ref / impl
-    );
-}
-
-Answer init_ans(size_t n){
-    Answer ans = new int*[n];
-    for (int i = 0; i < n; i++) {
-        ans[i] = new int[n];
-        for (int j = 0; j < n; j++) {
-            ans[i][j] = INT_MAX;
-        }
-    }
-    return ans;
-}
-
-void free_ans(Answer ans, size_t n){
-    for (int i = 0; i < n; i++) {
-        delete[] ans[i];
-    }
-    delete[] ans;
-}
 
 int main(int argc, char** argv) {
     // Check arguments
@@ -92,30 +46,28 @@ int main(int argc, char** argv) {
     auto ans = init_ans(n);
     std::cout << "Calculating answer...\n";
     auto start = sc.now(), end = sc.now();
-    if (strncmp(argv[1], "serial", 6) == 0) {
+    if (strcmp(argv[1], "serial") == 0) {
+        std::cout << "Running serial version.\n";
         start = sc.now(); 
         dijk_serial(g, ans, n);
         end = sc.now();
     }
-    else if (strncmp(argv[1], "thread", 6) == 0) {
+    else if (strcmp(argv[1], "thread") == 0) {
+        std::cout << "Running thread version.\n";
         std::cout << "num_threads: " << num_threads << "\n";
         start = sc.now(); 
         dijk_thread(g, ans, n, num_threads);
         end = sc.now();
     }
-    else if (strncmp(argv[1], "mp", 2) == 0) {
+    else if (strcmp(argv[1], "mp") == 0) {
+        std::cout << "Running mp version.\n";
         std::cout << "num_threads: " << num_threads << "\n";
         start = sc.now();
         dijk_mp(g, ans, n, num_threads);
         end = sc.now();
     }
-    else if (strncmp(argv[1], "mpi", 3) == 0) {
-        start = sc.now();
-        std::cerr << "Not implemented yet.\n";
-        end = sc.now();
-        return 2;
-    }
-    else if (strncmp(argv[1], "cuda", 4) == 0) {
+    else if (strcmp(argv[1], "cuda") == 0) {
+        std::cout << "Running cuda version.\n";
         start = sc.now();
         std::cerr << "Not implemented yet.\n";
         end = sc.now();
@@ -129,13 +81,15 @@ int main(int argc, char** argv) {
     std::cout << "answer calc done.\n";
 
     // Verify ans
+    bool correct = true;
     for (int i = 0; i < n; i++) {
         if (memcmp(ref_ans[i], ans[i], n * sizeof(ans[0][0])) != 0) {
             std::cerr << "\033[1;31mVerification failed.\033[0m\n";
-            return 2;
+            correct = false;
+            break;
         }
     }
-    std::cout << "\033[1;32mVerification passed.\033[0m\n";
+    if (correct) std::cout << "\033[1;32mVerification passed.\033[0m\n";
 
     free_ans(ref_ans, n);
     free_ans(ans, n);
