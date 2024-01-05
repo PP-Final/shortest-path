@@ -82,7 +82,7 @@ void dijk_mpi_omp(Graph graph, Answer ans, const int n, const int num_threads, c
     {
     #pragma omp for schedule(dynamic, 10)
     for (int i = start; i < end; i++) {
-        cnt[omp_get_thread_num()]++;
+        cnt[num_threads]++;
         ans[i][i] = 0;
         std::vector<bool> visited(n, false);
 
