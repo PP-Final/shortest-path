@@ -5,6 +5,7 @@
 #include <chrono>
 #include <climits>
 #include <thread>
+#include <fstream>
 
 #include "common/graph.h"
 #include "common/utils.h"
@@ -53,18 +54,16 @@ void dijk_mpi(Graph graph, Answer ans, const int n, const int rank, const int si
     if (rank != 0) {
         // Worker
         for (int i = start; i < end; i++) {
-            MPI_Send(ans[i], n, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+            MPI_Send(ans[i], n, MPI_SHORT, 0, 0, MPI_COMM_WORLD);
         }
-        // MPI_Send(ans[start], (end - start) * n, MPI_INT, 0, 0, MPI_COMM_WORLD);
     } else {
         // Master
         for (int i = 1; i < size; i++) {
             int start = i * num_nodes_per_proc;
             int end = i == size - 1 ? n : (i + 1) * num_nodes_per_proc;
             for (int j = start; j < end; j++) {
-                MPI_Recv(ans[j], n, MPI_CHAR, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(ans[j], n, MPI_SHORT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
-            // MPI_Recv(ans[start], (end - start) * n, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
 
@@ -82,7 +81,7 @@ void dijk_mpi_omp(Graph graph, Answer ans, const int n, const int num_threads, c
     {
     #pragma omp for schedule(dynamic, 10)
     for (int i = start; i < end; i++) {
-        cnt[num_threads]++;
+        cnt[omp_get_thread_num()]++;
         ans[i][i] = 0;
         std::vector<bool> visited(n, false);
 
@@ -124,18 +123,16 @@ void dijk_mpi_omp(Graph graph, Answer ans, const int n, const int num_threads, c
     if (rank != 0) {
         // Worker
         for (int i = start; i < end; i++) {
-            MPI_Send(ans[i], n, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+            MPI_Send(ans[i], n, MPI_SHORT, 0, 0, MPI_COMM_WORLD);
         }
-        // MPI_Send(ans[start], (end - start) * n, MPI_INT, 0, 0, MPI_COMM_WORLD);
     } else {
         // Master
         for (int i = 1; i < size; i++) {
             int start = i * num_nodes_per_proc;
             int end = i == size - 1 ? n : (i + 1) * num_nodes_per_proc;
             for (int j = start; j < end; j++) {
-                MPI_Recv(ans[j], n, MPI_CHAR, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(ans[j], n, MPI_SHORT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
-            // MPI_Recv(ans[start], (end - start) * n, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
 
@@ -170,7 +167,44 @@ int main(int argc, char** argv) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    // master sends file and worker receives file and stores it
+    auto start_send = sc.now(), end_send = sc.now();
+    if (rank == 0) {
+        std::ifstream fin(argv[1], std::ios::binary);
+        if (!fin) {
+            std::cerr << "Cannot open file " << argv[1] << "\n";
+            return 1;
+        }
+        fin.seekg(0, std::ios::end);
+        size_t file_size = fin.tellg();
+        fin.seekg(0, std::ios::beg);
+        std::cout << "File size: " << file_size << "\n";
+        char* buf = new char[file_size];
+        fin.read(buf, file_size);
+        fin.close();
+        start_send = sc.now();
+        for (int i = 1; i < size; i++) {
+            MPI_Send(&file_size, 1, MPI_UNSIGNED_LONG, i, 0, MPI_COMM_WORLD);
+            MPI_Send(buf, file_size, MPI_CHAR, i, 0, MPI_COMM_WORLD);
+        }
+        end_send = sc.now();
+        delete[] buf;
+    } else {
+        size_t file_size;
+        MPI_Recv(&file_size, 1, MPI_UNSIGNED_LONG, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        char* buf = new char[file_size];
+        MPI_Recv(buf, file_size, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        std::cout << "rank: " << rank << " received file.\n";
+        std::ofstream fout("tmp.bin", std::ios::binary);
+        fout.write(buf, file_size);
+        fout.close();
+        delete[] buf;
+        argv[1] = "tmp.bin";
+    }
+    auto time_span_send = static_cast<std::chrono::duration<double>>(end_send - start_send);
+
     Graph g = load_graph_binary(argv[1]);
+    std::cout << "Load graph: " << argv[1] << "\n";
     const size_t n = g->num_nodes;
     std::cout << "Graph loaded.\n";
     std::cout << "num_nodes: " << n << "\n";
@@ -181,7 +215,7 @@ int main(int argc, char** argv) {
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    auto start = sc.now(), end = sc.now(), end2 = sc.now();
+    auto start = sc.now(), end = sc.now();
     if (num_threads > 1) {
         std::cout << "Running mpi version with openmp.\n";
         start = sc.now();
@@ -219,7 +253,7 @@ int main(int argc, char** argv) {
         }
         if (correct) std::cout << "\033[1;32mVerification passed.\033[0m\n";
         free_ans(ref_ans, n);
-        output_summary(ref_time_span, time_span);
+        output_summary(ref_time_span, time_span + time_span_send);
         std::cout << std::endl;
     }
 
