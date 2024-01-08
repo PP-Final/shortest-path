@@ -54,7 +54,8 @@ __kernel void dijkstra_kernel(
     __global Vertex* incoming_edges,
     __global Weight* edges_weight,
 
-    __global Distance* ans, __global unsigned int* visited, const int n
+    __global Distance* ans, const int n,
+    __local bool* visited
 ) {
     Graph graph = {
         .num_edges = num_edges,
@@ -65,19 +66,19 @@ __kernel void dijkstra_kernel(
         .incoming_edges = incoming_edges,
         .edges_weight = edges_weight
     };
-
+    
     int id = get_global_id(0);
     for(int i = id; i < n; i += n) {
         ans[i * n + i] = 0;
         for (int j = 0; j < n; j++) {
             int u = -1;
             for (int k = 0; k < n; k++) {
-                if (!isVisited(visited, i, k, n) && (u == -1 || ans[i * n + k] < ans[i * n + u])) {
+                if (!visited[k] && (u == -1 || ans[i * n + k] < ans[i * n + u])) {
                     u = k;
                 }
             }
 
-            setVisited(visited, i, u, n);
+            visited[u] = true;
 
             // Relax neighboring nodes
             for (int k = 0; k < outgoing_size(&graph, u); k++) {

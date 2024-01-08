@@ -83,11 +83,6 @@ int main(int argc, char** argv) {
     // Verify ans
     bool correct = true;
     if (memcmp(ref_ans[0], ans[0], sizeof(Distance) * n * n) != 0) {
-        for(size_t i = 0; i < 100; i++){
-            if (ref_ans[0][i] != ans[0][i]) {
-                printf("Ref: %d, Mine: %d, i=%zu\n", ref_ans[0][i], ans[0][i], i);
-            }
-        }
         std::cerr << "\033[1;31mVerification failed.\033[0m\n";
     } else {
         std::cout << "\033[1;32mVerification passed.\033[0m\n";

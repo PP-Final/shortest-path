@@ -65,7 +65,7 @@ void free_cl_graph(ClGraph* graph){
     clReleaseMemObject(graph->edges_weight);
 }
 
-void setKernalArgs(ClGraph& graph, cl_mem& ansBuffer, cl_mem& visitedBuffer, const int n, cl_int& status, cl_kernel& kernel) {
+void setKernalArgs(ClGraph& graph, cl_mem& ansBuffer, const int n, cl_int& status, cl_kernel& kernel) {
     status = clSetKernelArg(kernel, 0, sizeof(int), &graph.num_edges);
     checkError(status, "clSetKernelArg(num_edges)");
 
@@ -86,11 +86,11 @@ void setKernalArgs(ClGraph& graph, cl_mem& ansBuffer, cl_mem& visitedBuffer, con
     status = clSetKernelArg(kernel, 7, sizeof(cl_mem), &ansBuffer);
     checkError(status, "clSetKernelArg(ans)");
 
-    status = clSetKernelArg(kernel, 8, sizeof(cl_mem), &visitedBuffer);
-    checkError(status, "clSetKernelArg(visited)");
-
-    status = clSetKernelArg(kernel, 9, sizeof(int), &n);
+    status = clSetKernelArg(kernel, 8, sizeof(int), &n);
     checkError(status, "clSetKernelArg(n)");
+
+    status = clSetKernelArg(kernel, 9, sizeof(cl_bool) * n, NULL);
+    checkError(status, "clSetKernelArg(visited)");
 }
 
 void dijk_opencl(Graph g, Answer ans, const int n) {
@@ -167,7 +167,7 @@ void dijk_opencl(Graph g, Answer ans, const int n) {
     checkError(status, "clCreateKernel");
 
     // Set the kernel arguments
-    setKernalArgs(cl_graph, ansBuffer, visitedBuffer, n, status, kernel);
+    setKernalArgs(cl_graph, ansBuffer, n, status, kernel);
 
     // Set global and local work sizes
     size_t localSize = local_size(n);
@@ -190,7 +190,6 @@ void dijk_opencl(Graph g, Answer ans, const int n) {
     // Clean up
     free_cl_graph(&cl_graph);
     clReleaseMemObject(ansBuffer);
-    clReleaseMemObject(visitedBuffer);
     clReleaseKernel(kernel);
     clReleaseProgram(program);
     clReleaseCommandQueue(queue);
