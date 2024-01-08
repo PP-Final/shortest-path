@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-using Distance = uint16_t;
+using Distance = int;
 using Answer = Distance**;
 
 void output_result(const Answer ans, const int n);
@@ -13,6 +13,6 @@ void output_summary(T1 ref, T2 impl);
 
 Answer init_ans(size_t n);
 
-void free_ans(Answer ans, size_t n);
+void free_ans(Answer ans);
 
 #endif

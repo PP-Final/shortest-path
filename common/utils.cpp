@@ -42,20 +42,30 @@ void output_summary(std::chrono::duration<double> ref, std::chrono::duration<dou
     );
 }
 
-Answer init_ans(size_t n){
-    Answer ans = new Distance*[n];
-    for (int i = 0; i < n; i++) {
-        ans[i] = new Distance[n];
-        for (int j = 0; j < n; j++) {
-            ans[i][j] = SHRT_MAX;
-        }
+Answer init_ans(size_t n) {
+    // Allocate a 1D array
+    Distance* flatAns = new Distance[n * n];
+
+    // Initialize the array
+    for (size_t i = 0; i < n * n; i++) {
+        flatAns[i] = INT_MAX;
     }
+
+    // Allocate an array of pointers
+    Answer ans = new Distance*[n];
+
+    // Assign pointers to rows of the 1D array
+    for (size_t i = 0; i < n; i++) {
+        ans[i] = &flatAns[i * n];
+    }
+
+    return ans;
+
     return ans;
 }
 
-void free_ans(Answer ans, size_t n){
-    for (int i = 0; i < n; i++) {
-        delete[] ans[i];
-    }
-    delete[] ans;
+void free_ans(Answer ans) {
+    // Free the allocated memory
+    delete[] ans[0]; // Delete the flatAns array
+    delete[] ans;    // Delete the array of pointers
 }

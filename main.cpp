@@ -67,12 +67,11 @@ int main(int argc, char** argv) {
         dijk_mp(g, ans, n, num_threads);
         end = sc.now();
     }
-    else if (strcmp(argv[1], "cuda") == 0) {
-        std::cout << "Running cuda version.\n";
-        start = sc.now();
-        std::cerr << "Not implemented yet.\n";
+    else if (strcmp(argv[1], "opencl") == 0) {
+        std::cout << "Running OpenCL version.\n";
+        start = sc.now(); 
+        dijk_opencl(g, ans, n);
         end = sc.now();
-        return 2;
     }
     else {
         std::cerr << "Invalid method: " << argv[1] << "\n";
@@ -83,17 +82,19 @@ int main(int argc, char** argv) {
 
     // Verify ans
     bool correct = true;
-    for (int i = 0; i < n; i++) {
-        if (memcmp(ref_ans[i], ans[i], n * sizeof(ans[0][0])) != 0) {
-            std::cerr << "\033[1;31mVerification failed.\033[0m\n";
-            correct = false;
-            break;
+    if (memcmp(ref_ans[0], ans[0], sizeof(Distance) * n * n) != 0) {
+        for(size_t i = 0; i < 100; i++){
+            if (ref_ans[0][i] != ans[0][i]) {
+                printf("Ref: %d, Mine: %d, i=%zu\n", ref_ans[0][i], ans[0][i], i);
+            }
         }
+        std::cerr << "\033[1;31mVerification failed.\033[0m\n";
+    } else {
+        std::cout << "\033[1;32mVerification passed.\033[0m\n";
     }
-    if (correct) std::cout << "\033[1;32mVerification passed.\033[0m\n";
 
-    free_ans(ref_ans, n);
-    free_ans(ans, n);
+    free_ans(ref_ans);
+    free_ans(ans);
     free_graph(g);
 
     // Output result
