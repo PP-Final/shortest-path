@@ -28,21 +28,6 @@ void checkError(cl_int status, const char* msg) {
     }
 }
 
-size_t local_size(int n) {
-    if (n <= MAX_LOCAL_SIZE) {
-        return n;
-    } else {
-        // Find the maximum factor of n that is <= 32
-        for (int factor = 32; factor > 1; factor--) {
-            if (n % factor == 0) {
-                return factor;
-            }
-        }
-        // If no factor found (unlikely for practical values of n), return 1
-        return 1;
-    }
-}
-
 ClGraph init_cl_graph(Graph graph, cl_context* context, cl_int* status){
     ClGraph deviceGraph;
     deviceGraph.num_nodes = graph->num_nodes;
@@ -89,7 +74,7 @@ void setKernalArgs(ClGraph& graph, cl_mem& ansBuffer, const int n, cl_int& statu
     status = clSetKernelArg(kernel, 8, sizeof(int), &n);
     checkError(status, "clSetKernelArg(n)");
 
-    status = clSetKernelArg(kernel, 9, sizeof(cl_bool) * n, NULL);
+    status = clSetKernelArg(kernel, 9, sizeof(cl_ulong) * ((n / BITS_PER_UINT) + 1), NULL);
     checkError(status, "clSetKernelArg(visited)");
 }
 
@@ -170,7 +155,6 @@ void dijk_opencl(Graph g, Answer ans, const int n) {
     setKernalArgs(cl_graph, ansBuffer, n, status, kernel);
 
     // Set global and local work sizes
-    size_t localSize = local_size(n);
     size_t globalWorkSize[] = { static_cast<size_t>(n) };
     size_t localWorkSize[] = { static_cast<size_t>(1) };
 

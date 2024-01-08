@@ -1,6 +1,6 @@
 // Dijkstra_kernel.cl
 
-#define BITS_PER_UINT 64  // Assuming 64 bits per uint
+#define BITS_PER_UINT 64
 #define UINT16_MAX 65535
 
 typedef int Vertex;
@@ -37,12 +37,13 @@ int outgoing_size(const Graph* g, Vertex v) {
     }
 }
 
-void setVisited(__global unsigned int* visited, const int row, const int col, const int n) {
-    visited[row * ((n + BITS_PER_UINT - 1) / BITS_PER_UINT) + (col / BITS_PER_UINT)] |= (1U << (col % BITS_PER_UINT));
+void setVisited(unsigned long* visited, int node) {
+    visited[node / BITS_PER_UINT] |= (1UL << (node % BITS_PER_UINT));
+    barrier(CLK_LOCAL_MEM_FENCE);
 }
 
-int isVisited(__global unsigned int* visited, const int row, const int col, const int n) {
-    return (visited[row * ((n + BITS_PER_UINT - 1) / BITS_PER_UINT) + (col / BITS_PER_UINT)] & (1U << (col % BITS_PER_UINT))) != 0;
+bool isVisited(unsigned long* visited, int node) {
+    return (visited[node / BITS_PER_UINT] & (1UL << (node % BITS_PER_UINT))) != 0;
 }
 
 __kernel void dijkstra_kernel(
@@ -55,7 +56,7 @@ __kernel void dijkstra_kernel(
     __global Weight* edges_weight,
 
     __global Distance* ans, const int n,
-    __local bool* visited
+    __local unsigned long* visited
 ) {
     Graph graph = {
         .num_edges = num_edges,
@@ -66,6 +67,11 @@ __kernel void dijkstra_kernel(
         .incoming_edges = incoming_edges,
         .edges_weight = edges_weight
     };
+
+    for(int i = 0; i <= n / BITS_PER_UINT + 1; i++) {
+        visited[i] = 0UL;
+    }
+    barrier(CLK_LOCAL_MEM_FENCE);
     
     int id = get_global_id(0);
     for(int i = id; i < n; i += n) {
@@ -73,12 +79,12 @@ __kernel void dijkstra_kernel(
         for (int j = 0; j < n; j++) {
             int u = -1;
             for (int k = 0; k < n; k++) {
-                if (!visited[k] && (u == -1 || ans[i * n + k] < ans[i * n + u])) {
+                if (!isVisited(visited, k) && (u == -1 || ans[i * n + k] < ans[i * n + u])) {
                     u = k;
                 }
             }
 
-            visited[u] = true;
+            setVisited(visited, u);
 
             // Relax neighboring nodes
             for (int k = 0; k < outgoing_size(&graph, u); k++) {
