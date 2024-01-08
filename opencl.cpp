@@ -117,7 +117,7 @@ void dijk_opencl(Graph g, Answer ans, const int n) {
     checkError(status, "clGetPlatformIDs");
 
     cl_device_id device;
-    status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);
+    status = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 1, &device, NULL);
     checkError(status, "clGetDeviceIDs");
 
     cl_context context = clCreateContext(NULL, 1, &device, NULL, NULL, &status);
